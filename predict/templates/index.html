@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Price Prediction</title>
+    <style>
+        body {
+    background-color: #f0f0f0;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.Prediction {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    width: 80%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.Prediction h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+button[type="submit"] {
+    width: 100%;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+p {
+    margin: 0;
+}
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="Prediction">
+            <h2>Enter Stock Name:</h2>
+            <form action="/" method="post">
+                <input type="text" name="stock_name" required>
+                <button type="submit">Predict</button>
+            </form>
+            {% if predicted_price %}
+                <h2>It may increase </h2>
+                <p>{{ predicted_price }}</p>
+                <br>
+                
+                {% if close_price_H2 %}
+                    <h2>Close Price at Position:</h2>
+                    <p>{{ close_price_H2 }}</p>
+                    <br>
+                    
+                    {% if total_price %}
+                        <h2>Predicted Stock Price for {{ stock_name }}</h2>
+                        <p>{{ total_price }}</p>
+                    {% endif %}
+                
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
