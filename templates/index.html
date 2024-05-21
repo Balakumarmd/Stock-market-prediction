@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Market</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <style>
+        /* General styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1, h2 {
+            color: #333;
+        }
+
+        a {
+            text-decoration: none;
+            color: #007bff;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* Navbar styles */
+        .navbar {
+            background-color: #fff;
+            padding: 10px 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between; /* Adjusts spacing between project name and nav options */
+            align-items: center;
+        }
+
+        .project-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .nav-options {
+            display: flex;
+        }
+
+        .nav-options a {
+            margin-left: 20px; /* Adjust spacing between nav links */
+        }
+
+        /* Section styles */
+        .section {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .section h1 {
+            margin-top: 0;
+        }
+
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th, table td {
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+
+        table th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        /* Button styles */
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Content box styles */
+        .content-box {
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .content-box h2 {
+            margin-top: 0;
+        }
+
+        .content-box p {
+            margin-bottom: 0;
+        }
+    </style>
+    <script>
+        $(document).ready(function() {
+            // Function to fetch live indices prices
+            function fetchLiveIndices() {
+                fetch('/get_live_prices')
+                    .then(response => response.json())
+                    .then(data => {
+                        // Update Nifty price and change
+                        $("#nifty_price").text(data.nifty_price);
+                        $("#nifty_change").text(data.nifty_change + "%");
+
+                        // Update Bank Nifty price and change
+                        $("#banknifty_price").text(data.banknifty_price);
+                        $("#banknifty_change").text(data.banknifty_change + "%");
+                    })
+                    .catch(error => console.error('Error fetching live indices prices:', error));
+            }
+
+            // Call fetchLiveIndices initially and every 10 seconds
+            fetchLiveIndices();
+            setInterval(fetchLiveIndices, 10000); // Refresh every 10 seconds
+            
+            // Hide all sections except the first one initially
+            $(".section").hide();
+            $("#nifty_banknifty_section").show();
+
+            // Navigation links click event
+            $("#home_link").click(function() {
+                $(".section").hide();
+                $("#nifty_banknifty_section").show();
+                $(".content-wrapper").toggle(); // Toggle content based on home link click
+            });
+
+            // Hide content wrapper when other links are clicked
+            $(".nav-options a").not("#home_link").click(function() {
+                $(".content-wrapper").hide();
+            });
+
+            $("#nifty_stocks_link").click(function() {
+                $(".section").hide();
+                $("#nifty_stocks_section").show();
+            });
+
+            $("#yesterday_report_link").click(function() {
+                $(".section").hide();
+                $("#yesterday_report_section").show();
+            });
+
+            $("#breakout_stocks_link").click(function() {
+                $(".section").hide();
+                $("#breakout_stocks_section").show();
+            });
+            
+            $("#stock_prediction_link").click(function() {
+                $(".section").hide();
+                $("#stock_prediction_section").show();
+            });
+            
+            // Submit button click event for stock prediction
+            $("#predict_button").click(function() {
+                var stockSymbol = $("#stock_symbol").val();
+                $.post("/predict_stock", { stock_symbol: stockSymbol }, function(data) {
+                    $("#prediction_result_section").html(data);
+                });
+            });
+        });
+
+        function predictStock() {
+            var stockSymbol = $("#stock_symbol").val();
+            $.ajax({
+                type: "POST",
+                url: "/predict_stock",
+                data: { stock_symbol: stockSymbol },
+                success: function(data) {
+                    $("#prediction_result").html(data);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error:", error);
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+    <div class="navbar">
+        <span class="project-name">Project</span>
+        <div class="nav-options">
+            <a href="#" id="home_link">Home</a>
+            <a href="#nifty-stocks" id="nifty_stocks_link">Nifty Stocks</a>
+            <a href="#yesterday-report" id="yesterday_report_link">Yesterday Report</a>
+            <a href="#breakout-stocks" id="breakout_stocks_link">Breakout Stocks</a>
+            <a href="#stock-prediction" id="stock_prediction_link">Stock Prediction</a>
+        </div>
+    </div>
+
+    <!-- Nifty and Bank Nifty Prices Section -->
+    <div id="nifty_banknifty_section" class="section">
+        <div class="price-box">
+            <h1>Nifty Price</h1>
+            <div id="live_indices">
+                <p><span id="nifty_price"></span></p>
+                <p>Nifty Change: <span id="nifty_change"></span>%</p>
+            </div>
+        </div>
+        <br>
+        <div class="price-box">
+            <h1>Bank Nifty Price</h1>
+            <div id="live_indices">
+                <p><span id="banknifty_price"></span></p>
+                <p>Bank Nifty Change: <span id="banknifty_change"></span>%</p>
+            </div>
+        </div>
+    </div><br><br>
+
+    <!-- Additional content about stock market -->
+    <div class="content-wrapper">
+        <div class="content-container">
+            <div class="content-box" id="additional_content">
+                <h2>What is Stock Market?</h2>
+                <p>The stock market refers to the collection of markets and exchanges where regular activities of buying, selling, and issuance of shares of publicly-held companies take place.</p>
+            </div>
+
+            <div class="content-box">
+                <h2>What is Trading?</h2>
+                <p>Trading is the act of buying and selling securities, such as stocks, options, commodities, or currencies, with the goal of generating profits.</p>
+            </div>
+
+            <div class="content-box">
+                <h2>What is Investment?</h2>
+                <p>Investment refers to the process of allocating resources, usually money, with the expectation of generating income or profit in the future.</p>
+            </div>
+
+            <div class="content-box">
+                <h2>Difference between Trading and Investment</h2>
+                <p>While trading and investment both involve buying assets with the expectation of earning a return, they differ in terms of time horizon, risk tolerance, and strategy.</p>
+            </div>
+
+            <div class="content-box">
+                <h2>Types of Trading</h2>
+                <p>There are various types of trading strategies, including day trading, swing trading, position trading, and algorithmic trading, each with its own characteristics and risks.</p>
+            </div>
+
+            <div class="content-box">
+                <h2>Option Trading</h2>
+                <p>Option trading is a type of derivative trading where traders can buy or sell options contracts, which give them the right to buy or sell an underlying asset at a specified price within a certain timeframe.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nifty Stocks Section -->
+    <div id="nifty_stocks_section" class="section">
+        <h1>Nifty Stocks</h1>
+        <div id="nifty_stocks">
+            {{ nifty_stocks | safe }}
+        </div>
+    </div>
+
+    <!-- Yesterday Report Section -->
+    <div id="yesterday_report_section" class="section">
+        <h1>Yesterday Report</h1>
+        <br>
+        <h2>Top Gainers</h2>
+        <div id="top_gainers">
+            {{ top_gainers | safe }}
+        </div>
+        <br>
+        <h2>Top Losers</h2>
+        <div id="top_losers">
+            {{ top_losers | safe }}
+        </div>
+    </div>
+
+    <!-- Breakout Stocks Section -->
+    <div id="breakout_stocks_section" class="section">
+        <h1>Breakout Stocks</h1>
+        <div id="breakout_stocks">
+            <table border="1">
+                <thead>
+                    <tr>
+                        <th>Stock Name</th>
+                        <th>Price</th>
+                        <th>Volume</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stock in breakout_stocks %}
+                        <tr>
+                            <td>{{ stock[0] }}</td>
+                            <td>{{ stock[1] }}</td>
+                            <td>{{ stock[2] }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Stock Prediction Section -->
+    <div id="stock_prediction_section" class="section">
+        <h1>Stock Prediction</h1>
+        <div class="content-box">
+            <h2>Nifty Option Recommendation:</h2>
+            {% if nifty_change is defined %}
+                {% if nifty_change < 0 %}
+                    <p>Buy the <strong>At The Money</strong> strike price on <strong> Put options</strong></p>
+                    <br>
+                {% elif nifty_change > 0 %}
+                    <p>Buy the <strong>At The Money</strong> strike price on <strong>Call options</strong></p>
+                    <br>
+                {% else %}
+                    <p>No recommendation at the moment</p>
+                    <br>
+                {% endif %}
+            {% else %}
+                <p>Price data not available</p>
+            {% endif %}
+            <h2>Bank Nifty Option Recommendation:</h2>
+            {% if banknifty_change is defined %}
+                {% if banknifty_change < 0 %}
+                    <p>Buy the <strong>At The Money</strong> strike price on <strong> Put options</strong></p>
+                    <br>
+                {% elif banknifty_change > 0 %}
+                    <p>Buy the <strong>At The Money</strong> strike price on <strong>Call options</strong> </p>
+                    <br>
+                {% else %}
+                    <p>No recommendation at the moment</p>
+                {% endif %}
+            {% else %}
+                <p>Price data not available</p>
+            {% endif %}
+        </div>
+    </div>
+    <script>
+        $(document).ready(function() {
+            // Fetch Nifty and Bank Nifty price changes
+            fetchIndicesPriceChanges();
+        });
+
+        function fetchIndicesPriceChanges() {
+            // Assume the Nifty and Bank Nifty price changes are fetched here, replace this with your actual implementation
+            var niftyPriceChange = -1.5; // Example value, replace with actual value
+            var bankniftyPriceChange = 2.5; // Example value, replace with actual value
+
+            // Display option recommendations based on Nifty and Bank Nifty price changes
+            if (niftyPriceChange < 0) {
+                $("#nifty_option_recommendation").html("Buy the<strong> AT The Money(ATM)</strong> strike price on <strong>Put options</strong>");
+            } else if (niftyPriceChange > 0) {
+                $("#nifty_option_recommendation").html("Buy the<strong> AT The Money(ATM)</strong> strike price on <strong>Call options</strong>");
+            } else {
+                $("#nifty_option_recommendation").html("No recommendation at the moment");
+            }
+
+            if (bankniftyPriceChange < 0) {
+                $("#banknifty_option_recommendation").html("Buy the<strong> AT The Money(ATM)</strong> strike price on <strong>Put options</strong>");
+            } else if (bankniftyPriceChange > 0) {
+                $("#banknifty_option_recommendation").html("Buy the<strong> AT The Money(ATM)</strong> strike price on <strong>Call options</strong>");
+            } else {
+                $("#banknifty_option_recommendation").html("No recommendation at the moment");
+            }
+        }
+    </script>
+</body>
+</html>
